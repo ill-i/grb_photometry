@@ -13,7 +13,7 @@ class PAHeaderAdder(api.AnetHeaderProcessor):
   indexPath = "/var/gavo/astrometry-indexes"
   sp_total_timelimit = 120
   sp_endob = 200
-  sp_indices = ["index*.fits"]
+  sp_indices = ["index-2mass-05*.fits"]
 
   sourceExtractorControl = """
     DETECT_MINAREA   20
@@ -47,9 +47,9 @@ class PAHeaderAdder(api.AnetHeaderProcessor):
     return True
 
   def _isProcessed(self, srcName):
-# TODO: make the thing actually sense whether a new-style header is present
-    return os.path.exists(srcName+".hdr")
-
+    hdr = self.getPrimaryHeader(srcName)
+    return "CD1_1" in hdr
+  
   def _mungeHeader(self, srcName, hdr):
     return fitstricks.makeHeaderFromTemplate(
             fitstricks.MINIMAL_IMAGE_TEMPLATE,
