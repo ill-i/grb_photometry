@@ -21,7 +21,7 @@
 
   <!-- Waveband is of Radio, Millimeter, 
       Infrared, Optical, UV, EUV, X-ray, Gamma-ray, can be repeated -->
-  <meta name="coverage.waveband">%word from controlled vocabulary%</meta>
+  <meta name="coverage.waveband">Optical</meta>
 
   <table id="main" onDisk="True" mixin="//siap#pgs" adql="True">
 
@@ -38,9 +38,9 @@
       targetClass="'%simbad target class%'"
     >//obscore#publishSIAP</mixin>-->
 
-		<column name="objects" type="char(15)[]"
+		<column name="object" type="text"
 			ucd="meta.id;src"
-			tablehead="Objs."
+			tablehead="Obj."
 			description="Object name"
 			verbLevel="3"/>
 		<column name="target_ra"
@@ -123,6 +123,10 @@
 
         <apply procDef="//siap#computePGS"/>
 
+				<map key="target_ra">hmsToDeg(@OBJCTRA, sepChar=" ")</map>
+				<map key="target_dec">hmsToDeg(@OBJCTDEC, sepChar=" ")</map>
+				<map key="object">@OBJECT</map>
+
         <!-- any custom columns need to be mapped here; do *not* use
           idmaps="*" with SIAP -->
       </rowmaker>
@@ -142,12 +146,12 @@
 				tablehead="Target Object"
 	      description="Object being observed, Simbad-resolvable form"
 	      ucd="meta.name">
-	      <values fromdb="unnest(objects) FROM grb_photometry.main"/>
+	      <values fromdb="unnest(object) FROM grb_photometry.main"/>
 	    </inputKey>
 	    <phraseMaker>
 		    <setup imports="numpy"/>
 		    <code><![CDATA[
-				  yield "%({})s && objects".format(
+				  yield "%({})s && object".format(
 				  base.getSQLKey("object",
 				  numpy.array(inPars["object"]), outPars))
 				]]></code>
@@ -160,11 +164,7 @@
 	  <meta name="title">Web interface to FAI GRB observations</meta>
 		<outputTable autoCols="accref,accsize,centerAlpha,centerDelta,
 			            dateObs,imageTitle">
-			<outputField original="objects">
-				<formatter>
-					return " - ".join(data)
-				</formatter>
-			</outputField>
+			<outputField original="object"/>
 		</outputTable>
 	</service>
 
@@ -186,29 +186,9 @@
     <publish render="form" sets="local,ivo_managed"/>
     <!-- all publish elements only become active after you run
       dachs pub q -->
-
-    <dbCore queriedTable="main">
-      <condDesc original="//siap#protoInput"/>
-      <condDesc original="//siap#humanInput"/>
-      <!-- enable further parameters like
-        <condDesc buildFrom="dateObs"/>
-
-        or
-
-        <condDesc>
-          <inputKey name="object" type="text" 
-              tablehead="Target Object" 
-              description="Object being observed, Simbad-resolvable form"
-              ucd="meta.name" verbLevel="5" required="True">
-              <values fromdb="object FROM lensunion.main"/>
-          </inputKey>
-        </condDesc> -->
-    </dbCore>
   </service>
 
   <regSuite title="grb_photometry regression">
-    <!-- see http://docs.g-vo.org/DaCHS/ref.html#regression-testing
-      for more info on these. -->
 
     <regTest title="grb_photometry SIAP serves some data">
       <url POS="251.2,72.3" SIZE="0.1,0.1"
@@ -217,8 +197,8 @@
 				rows = self.getVOTableRows()
 				self.assertEqual(len(rows), 1)
 				row = rows[0]
-				self.assertEqual(row["objects"][0].strip(), "GRB200829A")
-				self.assertEqual(len(row["objects"]), 1)
+				self.assertEqual(row["object"].strip(), "GRB200829A")
+				self.assertEqual(len(row["object"]), 1)
 				self.assertEqual(row["imageTitle"],
 									'GRB200829A-0002_r.fit')
 			</code>
