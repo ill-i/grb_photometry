@@ -38,38 +38,38 @@
       targetClass="'%simbad target class%'"
     >//obscore#publishSIAP</mixin>-->
 
-		<column name="object" type="text"
-			ucd="meta.id;src"
-			tablehead="Obj."
-			description="Object name"
-			verbLevel="3"/>
-		<column name="target_ra"
-			unit="deg" ucd="pos.eq.ra;meta.main"
-			tablehead="Target RA"
-			description="Right ascension of an object."
-			verbLevel="1"/>
-		<column name="target_dec"
-			unit="deg" ucd="pos.eq.dec;meta.main"
-			tablehead="Target Dec"
-			description="Declination of an object."
-			verbLevel="1"/>
-		<column name="exptime"
-			unit="s" ucd="time.duration;obs.exposure"
-			tablehead="T.Exp"
-			description="Exposure time."
-			verbLevel="5"/>
-		<column name="telescope" type="text"
-			ucd="instr.tel"
-			tablehead="Telescope"
-			description="Telescope."
-			verbLevel="3"/>
-		<column name="observat" type="text"
-		  ucd="instr.tel"
-		  tablehead="Observat"
-		  description="Observatory where data was obtained."
-		  verbLevel="3"/>
+    <column name="object" type="text"
+      ucd="meta.id;src"
+      tablehead="Obj."
+      description="Object name"
+      verbLevel="3"/>
+    <column name="target_ra"
+      unit="deg" ucd="pos.eq.ra;meta.main"
+      tablehead="Target RA"
+      description="Right ascension of an object."
+      verbLevel="1"/>
+    <column name="target_dec"
+      unit="deg" ucd="pos.eq.dec;meta.main"
+      tablehead="Target Dec"
+      description="Declination of an object."
+      verbLevel="1"/>
+    <column name="exptime"
+      unit="s" ucd="time.duration;obs.exposure"
+      tablehead="T.Exp"
+      description="Exposure time."
+      verbLevel="5"/>
+    <column name="telescope" type="text"
+      ucd="instr.tel"
+      tablehead="Telescope"
+      description="Telescope."
+      verbLevel="3"/>
+    <column name="observat" type="text"
+      ucd="instr.tel"
+      tablehead="Observat"
+      description="Observatory where data was obtained."
+      verbLevel="3"/>
     
-	</table>
+  </table>
 
   <coverage>
     <updater sourceTable="main"/>
@@ -94,11 +94,19 @@
 
     <make table="main">
       <rowmaker>
-				<simplemaps>
-					exptime: EXPOSURE,
-					telescope: TELESCOP,
-					observat: OBSERVAT
-				</simplemaps>
+        <simplemaps>
+          exptime: EXPOSURE,
+          telescope: TELESCOP,
+          observat: OBSERVAT
+        </simplemaps>
+        
+        <apply procDef="//procs#dictMap">
+          <bind key="mapping">{
+            "Sloan_r": "SDSS r",
+          }</bind>
+	  <bind key="key">"FILTER"</bind>
+        </apply>
+
         <!-- put vars here to pre-process FITS keys that you need to
           re-format in non-trivial ways. -->
         <apply procDef="//siap#setMeta">
@@ -116,16 +124,16 @@
             V unspecified visualisation for presentation only
           <bind key="pixflags"></bind>-->
         
-	  <bind key="title">"{} {} {}".format(@OBJECT, @DATE_OBS, @FILTER)</bind>
+    <bind key="title">"{} {} {}".format(@OBJECT, @DATE_OBS, @FILTER)</bind>
         </apply>
 
         <apply procDef="//siap#getBandFromFilter"/>
 
         <apply procDef="//siap#computePGS"/>
 
-				<map key="target_ra">hmsToDeg(@OBJCTRA, sepChar=" ")</map>
-				<map key="target_dec">hmsToDeg(@OBJCTDEC, sepChar=" ")</map>
-				<map key="object">@OBJECT</map>
+        <map key="target_ra">hmsToDeg(@OBJCTRA, sepChar=" ")</map>
+        <map key="target_dec">hmsToDeg(@OBJCTDEC, sepChar=" ")</map>
+        <map key="object">@OBJECT</map>
 
         <!-- any custom columns need to be mapped here; do *not* use
           idmaps="*" with SIAP -->
@@ -137,39 +145,24 @@
     SIAP, you probably want to have a custom form service; for
     just basic functionality, this should do, however. -->
   
-	<dbCore queriedTable="main" id="imagecore">
-    <condDesc original="//siap#protoInput"/>
-		<condDesc original="//siap#humanInput"/>
-		<condDesc buildFrom="dateObs"/>
-		<condDesc>
-			<inputKey name="object" type="text" multiplicity="multiple"
-				tablehead="Target Object"
-	      description="Object being observed, Simbad-resolvable form"
-	      ucd="meta.name">
-	      <values fromdb="unnest(object) FROM grb_photometry.main"/>
-	    </inputKey>
-	    <phraseMaker>
-		    <setup imports="numpy"/>
-		    <code><![CDATA[
-				  yield "%({})s && object".format(
-				  base.getSQLKey("object",
-				  numpy.array(inPars["object"]), outPars))
-				]]></code>
-			</phraseMaker>
-		</condDesc>
-	</dbCore>
+  <dbCore queriedTable="main" id="imagecore">
+                <condDesc original="//siap#protoInput"/>
+    <condDesc original="//siap#humanInput"/>
+    <condDesc buildFrom="dateObs"/>
+    <condDesc buildFrom="object"/>
+  </dbCore>
 
-	<service id="web" allowed="form" core="imagecore">
+  <service id="web" allowed="form" core="imagecore">
     <meta name="shortName">grb siap</meta>
-	  <meta name="title">Web interface to FAI GRB observations</meta>
-		<outputTable autoCols="accref,accsize,centerAlpha,centerDelta,
-			            dateObs,imageTitle">
-			<outputField original="object"/>
-		</outputTable>
-	</service>
+    <meta name="title">Web interface to FAI GRB observations</meta>
+    <outputTable autoCols="accref,accsize,centerAlpha,centerDelta,
+                  dateObs,imageTitle">
+      <outputField original="object"/>
+    </outputTable>
+  </service>
 
-		
-	<service id="i" allowed="form,siap.xml" core="imagecore">
+    
+  <service id="i" allowed="form,siap.xml" core="imagecore">
     <meta name="shortName">grb siap</meta>
 
     <!-- other sia.types: Cutout, Mosaic, Atlas -->
@@ -191,17 +184,15 @@
   <regSuite title="grb_photometry regression">
 
     <regTest title="grb_photometry SIAP serves some data">
-      <url POS="251.2,72.3" SIZE="0.1,0.1"
+      <url POS="251.2,72.3" SIZE="0.1,0.1" dateObs="59107.7/"
         >i/siap.xml</url>
       <code>
-				rows = self.getVOTableRows()
-				self.assertEqual(len(rows), 1)
-				row = rows[0]
-				self.assertEqual(row["object"].strip(), "GRB200829A")
-				self.assertEqual(len(row["object"]), 1)
-				self.assertEqual(row["imageTitle"],
-									'GRB200829A-0002_r.fit')
-			</code>
+        rows = self.getVOTableRows()
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(row["object"], "GRB200829A")
+        self.assertEqual(row["imageTitle"],'GRB200829A 2020-09-15T17:22:21.24 SDSS r')
+      </code>
     </regTest>
 
     <!-- add more tests: image actually delivered, form-based service
