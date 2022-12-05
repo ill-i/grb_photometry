@@ -30,13 +30,12 @@
     
     Get the target class, if any, from 
     http://simbad.u-strasbg.fr/guide/chF.htx -->
-    <!--<mixin
+    <mixin
       calibLevel="2"
-      collectionName="'%a few letters identifying this data%'"
-      targetName="%column name of an object designation%"
-      expTime="%column name of an exposure time%"
-      targetClass="'%simbad target class%'"
-    >//obscore#publishSIAP</mixin>-->
+      collectionName="'FAI GRB Phot'"
+      targetName="OBJECT"
+      expTime="EXPTIME"
+    >//obscore#publishSIAP</mixin>
 
     <column name="object" type="text"
       ucd="meta.id;src"
